@@ -1,0 +1,60 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller
+
+def test_stationarity(timeseries):
+    # Perform Augmented Dickey-Fuller test for stationarity
+    result = adfuller(timeseries)
+    p_value = result[1]
+    return p_value <= 0.05
+
+def forecast_sales(data, department_name):
+    # Assuming 'data' is a pandas DataFrame with 'Date' and 'Sales' columns
+    data = data[data['Department'] == department_name].copy()
+    data['Date'] = pd.to_datetime(data['Date'])
+    data.set_index('Date', inplace=True)
+
+    # Check stationarity and apply differencing if necessary
+    if not test_stationarity(data['Sales']):
+        data['Sales'] = data['Sales'] - data['Sales'].shift(1)
+        data.dropna(inplace=True)
+
+    # Split into training and testing sets
+    train_size = int(0.8 * len(data))
+    train, test = data.iloc[:train_size], data.iloc[train_size:]
+
+    # Fit ARIMA model
+    order = (2, 1, 2)  # (p, d, q) - These values can be adjusted based on the data
+    model = ARIMA(train['Sales'], order=order)
+    results = model.fit()
+
+    # Forecast sales for the test set
+    forecast_values = results.forecast(steps=len(test))[0]
+
+    # Plot the actual sales and forecasted sales
+    plt.figure(figsize=(10, 6))
+    plt.plot(train.index, train['Sales'], label='Train')
+    plt.plot(test.index, test['Sales'], label='Test')
+    plt.plot(test.index, forecast_values, label='Forecast')
+    plt.xlabel('Date')
+    plt.ylabel('Sales')
+    plt.title(f'Sales Forecast for {department_name} Department')
+    plt.legend()
+    plt.show()
+
+    # Return the forecasted values
+    return forecast_values
+
+# Example usage
+if __name__ == "__main__":
+    # Load your supermarket sales data into a pandas DataFrame (replace this with your data)
+    # For example, assume the columns are 'Date', 'Department', and 'Sales'
+    sales_data = pd.read_csv('sales_data.csv')
+
+    # Replace 'Department A' with the department you want to forecast
+    department_to_forecast = 'Department A'
+    forecasted_sales = forecast_sales(sales_data, department_to_forecast)
+    print("Forecasted Sales:")
+    print(forecasted_sales)
