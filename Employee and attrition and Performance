@@ -1,0 +1,59 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+def evaluate_attrition(data):
+    # Preprocess data and convert categorical variables to numerical
+    data = pd.get_dummies(data, columns=['JobRole'], drop_first=True)
+
+    # Select features and target variable
+    X = data.drop(['Attrition'], axis=1)
+    y = data['Attrition']
+
+    # Split data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Train the logistic regression model
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+
+    # Make predictions on the test set
+    y_pred = model.predict(X_test)
+
+    # Calculate accuracy and other metrics
+    accuracy = accuracy_score(y_test, y_pred)
+    conf_matrix = confusion_matrix(y_test, y_pred)
+    classification_rep = classification_report(y_test, y_pred)
+
+    print("Accuracy:", accuracy)
+    print("Confusion Matrix:")
+    print(conf_matrix)
+    print("Classification Report:")
+    print(classification_rep)
+
+    # Return the trained model
+    return model
+
+# Example usage
+if __name__ == "__main__":
+    # Load employee data into a pandas DataFrame (replace this with your data)
+    # The DataFrame should contain columns like 'Attrition', 'DistanceFromHome', 'JobRole', 'Performance', etc.
+    employee_data = pd.read_csv('employee_data.csv')
+
+    # Train the model and get the trained model
+    trained_model = evaluate_attrition(employee_data)
+
+    # Example of predicting attrition for an employee
+    # Replace these values with the employee's data to be evaluated
+    new_employee = pd.DataFrame({
+        'DistanceFromHome': [10],
+        'JobRole_Research Scientist': [0],
+        'JobRole_Sales Executive': [1],
+        'JobRole_Laboratory Technician': [0],
+        'Performance': [8]
+    })
+
+    attrition_prediction = trained_model.predict(new_employee)
+    print("Attrition Prediction for the Employee:", attrition_prediction[0])
