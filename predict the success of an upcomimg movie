@@ -1,0 +1,50 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+def predict_movie_success(movie_data):
+    # Feature engineering (you may need to include more relevant features)
+    # For example, 'Budget', 'MarketingCost', 'Ratings', 'Genre', etc.
+    X = movie_data[['Budget', 'MarketingCost', 'Ratings']].values
+    y = movie_data['ROI'].values
+
+    # Split data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Train the linear regression model
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+
+    # Make predictions on the test set
+    y_pred = model.predict(X_test)
+
+    # Calculate metrics
+    mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+
+    print("Mean Squared Error:", mse)
+    print("R-squared:", r2)
+
+    # Return the trained model
+    return model
+
+# Example usage
+if __name__ == "__main__":
+    # Load historical movie data into a pandas DataFrame (replace this with your data)
+    # The DataFrame should contain columns like 'Budget', 'MarketingCost', 'Ratings', 'ROI', etc.
+    movie_data = pd.read_csv('movie_data.csv')
+
+    # Train the model and get the trained model
+    trained_model = predict_movie_success(movie_data)
+
+    # Example of predicting ROI for an upcoming movie
+    upcoming_movie = pd.DataFrame({
+        'Budget': [50000000],       # Replace this with the budget of the upcoming movie
+        'MarketingCost': [20000000], # Replace this with the marketing cost of the upcoming movie
+        'Ratings': [8.5]             # Replace this with the ratings of the upcoming movie
+    })
+
+    predicted_roi = trained_model.predict(upcoming_movie)
+    print("Predicted ROI for the upcoming movie:", predicted_roi[0])
